@@ -67,6 +67,10 @@ function radarActionFor(row, capital, chain) {
   var c = (row.category || '').toLowerCase();
   var name = row.name;
   if (c.indexOf('lend') >= 0 || c.indexOf('cdp') >= 0 || c.indexOf('collateral') >= 0) return 'Lend $' + capital + ' of USDC into ' + name + ' on ' + chain + ' and leave the supply earning.';
+  // 'Indexes' contains 'dex' and 'Interest Rate Derivatives' contains 'derivative': check the
+  // longer, more specific names before the shorter substrings that would swallow them.
+  if (c.indexOf('index') >= 0) return 'Buy $' + capital + ' of the ' + name + ' index token on ' + chain + ' and hold it.';
+  if (c.indexOf('interest rate') >= 0) return 'Lend $' + capital + " into " + name + "'s fixed-rate market on " + chain + ' through one full term.';
   if (c.indexOf('dex') >= 0) return 'Add $' + capital + " of liquidity to " + name + "'s deepest pool on " + chain + ' and leave it in range.';
   if (c.indexOf('yield') >= 0 || c.indexOf('leveraged farm') >= 0 || c.indexOf('farm') >= 0) return 'Deposit $' + capital + " into " + name + "'s highest-TVL strategy on " + chain + ' and leave the receipt tokens untouched.';
   if (c.indexOf('bridge') >= 0 || c.indexOf('cross chain') >= 0) return 'Bridge $' + capital + ' of USDC through ' + name + ' to ' + chain + ' and put the bridged funds to work in its app.';
@@ -78,8 +82,6 @@ function radarActionFor(row, capital, chain) {
   if (c.indexOf('rwa') >= 0) return 'Buy $' + capital + " of the protocol's yield-bearing asset on " + chain + ' and hold it.';
   if (c.indexOf('insurance') >= 0) return 'Buy $' + capital + ' of cover from ' + name + ' on ' + chain + ' and keep the policy active.';
   if (c.indexOf('basis') >= 0) return 'Deposit $' + capital + " into " + name + "'s basis strategy on " + chain + ' and hold the position.';
-  if (c.indexOf('index') >= 0) return 'Buy $' + capital + ' of the ' + name + ' index token on ' + chain + ' and hold it.';
-  if (c.indexOf('interest rate') >= 0) return 'Lend $' + capital + " into " + name + "'s fixed-rate market on " + chain + ' through one full term.';
   if (c === 'chain') return 'Bridge $' + capital + " to the chain and use " + name + "'s native app: one swap and one stake.";
   return 'Deposit $' + capital + ' of USDC into ' + name + ' on ' + chain + ' and leave the position open.';
 }
@@ -305,7 +307,9 @@ function radarFarmSteps(row) {
         el('button', { class: 'button primary', type: 'button', text: 'Clear filters', onclick: function () { state.q = ''; state.category = 'all'; state.chain = 'all'; writeHash(); render(); } })
       ));
     }
-    var max = list[0].implied_value_usd || 1;
+    // Scale bars to the largest value in view, not the first row: the list may be sorted by name or TVL.
+    var max = 1;
+    for (var i = 0; i < list.length; i++) if (list[i].implied_value_usd > max) max = list[i].implied_value_usd;
     var tbody = el('tbody');
     list.forEach(function (r) {
       var growth = r.change_7d === null ? 'n/a' : fmtPct(r.change_7d);

@@ -77,6 +77,10 @@ function copyTree(from: string, to: string, prefix = ''): string[] {
 }
 
 const dashFiles = copyTree(join(here, 'dashboard'), join(out, 'dashboard'));
+if (!existsSync(join(out, 'dashboard', 'index.html'))) {
+  process.stderr.write('token radar: dashboard/index.html missing after copy; the dashboard cannot open\n');
+  process.exit(1);
+}
 const shots = copyTree(join(here, 'screenshots'), join(out, 'screenshots'));
 if (shots.length < 3) {
   process.stderr.write(`token radar: screenshots/ holds ${shots.length} image${shots.length === 1 ? '' : 's'}: hand in 3, the board, a detail view and a filtered view\n`);

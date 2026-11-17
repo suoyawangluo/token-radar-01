@@ -94,6 +94,10 @@ export function actionFor(p: SnapshotProtocol, capital: number, chain: string): 
   if (c.includes('lend') || c.includes('cdp') || c.includes('collateral')) {
     return `Lend $${capital} of USDC into ${name} on ${chain} and leave the supply earning.`;
   }
+  // 'Indexes' contains 'dex' and 'Interest Rate Derivatives' contains 'derivative': check the
+  // longer, more specific names before the shorter substrings that would swallow them.
+  if (c.includes('index')) return `Buy $${capital} of the ${name} index token on ${chain} and hold it.`;
+  if (c.includes('interest rate')) return `Lend $${capital} into ${name}'s fixed-rate market on ${chain} through one full term.`;
   if (c.includes('dex')) return `Add $${capital} of liquidity to ${name}'s deepest pool on ${chain} and leave it in range.`;
   if (c.includes('yield') || c.includes('leveraged farm') || c.includes('farm')) {
     return `Deposit $${capital} into ${name}'s highest-TVL strategy on ${chain} and leave the receipt tokens untouched.`;
@@ -113,8 +117,6 @@ export function actionFor(p: SnapshotProtocol, capital: number, chain: string): 
   if (c.includes('rwa')) return `Buy $${capital} of the protocol's yield-bearing asset on ${chain} and hold it.`;
   if (c.includes('insurance')) return `Buy $${capital} of cover from ${name} on ${chain} and keep the policy active.`;
   if (c.includes('basis')) return `Deposit $${capital} into ${name}'s basis strategy on ${chain} and hold the position.`;
-  if (c.includes('index')) return `Buy $${capital} of the ${name} index token on ${chain} and hold it.`;
-  if (c.includes('interest rate')) return `Lend $${capital} into ${name}'s fixed-rate market on ${chain} through one full term.`;
   if (c === 'chain') return `Bridge $${capital} to the chain and use ${name}'s native app: one swap and one stake.`;
   return `Deposit $${capital} of USDC into ${name} on ${chain} and leave the position open.`;
 }
