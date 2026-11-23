@@ -82,6 +82,13 @@ function radarActionFor(row, capital, chain) {
   if (c.indexOf('rwa') >= 0) return 'Buy $' + capital + " of the protocol's yield-bearing asset on " + chain + ' and hold it.';
   if (c.indexOf('insurance') >= 0) return 'Buy $' + capital + ' of cover from ' + name + ' on ' + chain + ' and keep the policy active.';
   if (c.indexOf('basis') >= 0) return 'Deposit $' + capital + " into " + name + "'s basis strategy on " + chain + ' and hold the position.';
+  if (c.indexOf('liquidity manager') >= 0) return 'Deposit $' + capital + " into " + name + "'s managed liquidity vault on " + chain + ' and leave the position in range.';
+  if (c.indexOf('cedefi') >= 0) return 'Deposit $' + capital + " of USDC into " + name + "'s CeDeFi vault on " + chain + ' and hold the vault shares.';
+  if (c.indexOf('anchor btc') >= 0) return 'Lock $' + capital + ' of BTC-backed collateral in ' + name + ' on ' + chain + ', borrow against it once, and repay the loan.';
+  if (c.indexOf('decentralized btc') >= 0) return 'Bridge $' + capital + ' of BTC through ' + name + ' to ' + chain + ' and put the wrapped BTC to work in its app.';
+  if (c.indexOf('payments') >= 0) return 'Send $' + capital + " through " + name + "'s payment app on " + chain + ' and keep a steady weekly payment rhythm.';
+  if (c.indexOf('governance incentives') >= 0) return 'Lock $' + capital + " in " + name + "'s governance vault on " + chain + ' and vote on every proposal while the position is open.';
+  if (c.indexOf('crypto card') >= 0) return 'Order the ' + name + ' card, spend $' + capital + ' through it on ' + chain + ', and keep the card active each week.';
   if (c === 'chain') return 'Bridge $' + capital + " to the chain and use " + name + "'s native app: one swap and one stake.";
   return 'Deposit $' + capital + ' of USDC into ' + name + ' on ' + chain + ' and leave the position open.';
 }
@@ -92,6 +99,7 @@ function radarWeeklyActionFor(row) {
   if (c.indexOf('dex') >= 0) return 'Each week, rebalance or top up the pool position once, and route one swap through the protocol.';
   if (c.indexOf('lend') >= 0 || c.indexOf('cdp') >= 0) return 'Each week, adjust the supply once, or borrow and repay a small amount so the position stays active.';
   if (c.indexOf('staking') >= 0 || c.indexOf('restak') >= 0) return 'Each week, restake the rewards or add a little more stake so the position keeps growing.';
+  if (c.indexOf('payments') >= 0) return 'Each week, send one payment through the app so the volume stays steady.';
   return 'Each week, make one more qualifying action: a deposit, a swap, a borrow-and-repay, or a vote when one is live.';
 }
 
@@ -129,7 +137,7 @@ function radarFarmSteps(row) {
   if (typeof window === 'undefined' || !window.RADAR) return;
   var DATA = window.RADAR;
   var app = document.getElementById('board');
-  var state = { q: '', category: 'all', chain: 'all', tab: 'pre-token', sort: 'implied', dir: -1, selected: null };
+  var state = { q: '', category: 'all', chain: 'all', scope: 'all', tab: 'pre-token', sort: 'implied', dir: -1, selected: null };
 
   function fmtUsd(n) {
     if (n === null || n === undefined || !isFinite(n)) return 'n/a';
@@ -186,6 +194,7 @@ function radarFarmSteps(row) {
     if (params.get('q')) state.q = params.get('q');
     if (params.get('category')) state.category = params.get('category');
     if (params.get('chain')) state.chain = params.get('chain');
+    if (params.get('scope') === 'watchlist' || params.get('scope') === 'early') state.scope = params.get('scope');
     if (params.get('tab')) state.tab = params.get('tab');
     if (params.get('sort')) state.sort = params.get('sort');
     if (params.get('dir') === '1' || params.get('dir') === '-1') state.dir = parseInt(params.get('dir'), 10);
@@ -199,6 +208,7 @@ function radarFarmSteps(row) {
       if (state.q) params.set('q', state.q);
       if (state.category !== 'all') params.set('category', state.category);
       if (state.chain !== 'all') params.set('chain', state.chain);
+      if (state.scope !== 'all') params.set('scope', state.scope);
       if (state.tab !== 'pre-token') params.set('tab', state.tab);
       if (state.sort !== 'implied') params.set('sort', state.sort);
       if (state.dir !== -1) params.set('dir', String(state.dir));
@@ -213,6 +223,8 @@ function radarFarmSteps(row) {
     return DATA.rows.filter(function (r) {
       if (state.category !== 'all' && (r.category || 'Uncategorized') !== state.category) return false;
       if (state.chain !== 'all' && (r.chains || []).indexOf(state.chain) < 0) return false;
+      if (state.scope === 'watchlist' && !r.on_watchlist) return false;
+      if (state.scope === 'early' && r.on_watchlist) return false;
       if (!q) return true;
       var hay = [r.name, r.slug, r.category, (r.chains || []).join(' ')].join(' ').toLowerCase();
       return hay.indexOf(q) >= 0;
@@ -251,7 +263,7 @@ function radarFarmSteps(row) {
     return el('section', { class: 'lede' },
       el('div', null,
         el('h1', null, 'Every pre-token protocol, priced off ', el('span', { class: 'accent-word', text: 'its own category' }), '.'),
-        el('p', { text: 'The watchlist is the floor: every protocol with at least $' + Math.round(DATA.floor_usd / 1e6) + 'M of TVL and no token on record. The early radar adds ' + DATA.early_size + ' more below that floor. Each implied value is TVL times the median market-cap-to-TVL ratio of the trading protocols in its own category — never a hand-picked number. Implied value is a model, not a promise.' })
+        el('p', { text: 'The watchlist is the floor: every protocol with at least $' + Math.round(DATA.floor_usd / 1e6) + 'M of TVL and no token on record. The early radar adds ' + DATA.early_size + ' more below that floor. Each implied value is TVL times the median market-cap-to-TVL ratio of the trading protocols in its own category where the category has enough of them, otherwise the whole market\u2019s median \u2014 never a hand-picked number. Implied value is a model, not a promise.' })
       ),
       el('div', { class: 'facts' },
         el('div', { class: 'fact' }, el('span', { text: 'Watchlist covered' }), el('b', { text: DATA.watchlist_size + ' / ' + DATA.watchlist_size })),
@@ -278,12 +290,19 @@ function radarFarmSteps(row) {
       chains.map(function (c) { return el('option', { value: c, text: c, selected: c === state.chain ? 'selected' : null }); })
     );
     chainSelect.addEventListener('change', function () { state.chain = chainSelect.value; writeHash(); render(); });
+    var scopeSelect = el('select', { id: 'scope', 'aria-label': 'Filter by scope' },
+      el('option', { value: 'all', text: 'All rows' }),
+      el('option', { value: 'watchlist', text: 'Watchlist only', selected: state.scope === 'watchlist' ? 'selected' : null }),
+      el('option', { value: 'early', text: 'Early radar only', selected: state.scope === 'early' ? 'selected' : null })
+    );
+    scopeSelect.addEventListener('change', function () { state.scope = scopeSelect.value; writeHash(); render(); });
     var pre = el('button', { type: 'button', 'aria-pressed': state.tab === 'pre-token' ? 'true' : 'false', text: 'Pre-token board', onclick: function () { state.tab = 'pre-token'; writeHash(); render(); } });
     var live = el('button', { type: 'button', 'aria-pressed': state.tab === 'live' ? 'true' : 'false', text: 'Live token', onclick: function () { state.tab = 'live'; writeHash(); render(); } });
     return el('div', { class: 'controls' },
       el('div', { class: 'field' }, el('label', { for: 'q', text: 'Search' }), search),
       el('div', { class: 'field' }, el('label', { for: 'category', text: 'Category' }), catSelect),
       el('div', { class: 'field' }, el('label', { for: 'chain', text: 'Chain' }), chainSelect),
+      el('div', { class: 'field' }, el('label', { for: 'scope', text: 'Scope' }), scopeSelect),
       el('div', { class: 'field' }, el('span', { class: 'sub', text: 'Token status' }), el('div', { class: 'tabs' }, pre, live)),
       el('span', { class: 'count', text: state.tab === 'pre-token' ? filteredRows().length + ' rows shown' : DATA.live.length + ' live-token protocols' })
     );
@@ -435,10 +454,10 @@ function radarFarmSteps(row) {
         el('div', null, el('span', { text: 'TVL' }), el('b', { class: 'num', text: fmtUsd(row.tvl_usd) })),
         el('div', null, el('span', { text: 'Category multiple' }), el('b', { class: 'num', text: fmtMult(row.multiple) + ' (' + row.comparables + ' comparables, ' + (row.multiple_source === 'category' ? 'own category' : 'global fallback') + ')' })),
         el('div', null, el('span', { text: 'Seven-day growth' }), el('b', { class: 'num', text: fmtPct(row.change_7d) })),
-        el('div', null, el('span', { text: 'Growth multiplier' }), el('b', { class: 'num', text: String(row.growth_multiplier) })),
+        el('div', null, el('span', { text: 'Growth multiplier' }), el('b', { class: 'num', text: row.growth_multiplier.toFixed(3) })),
         el('div', null, el('span', { text: 'Age with no token' }), el('b', { class: 'num', text: fmtAge(row.age_days) })),
-        el('div', null, el('span', { text: 'Tenure multiplier' }), el('b', { class: 'num', text: String(row.tenure_multiplier) })),
-        el('div', null, el('span', { text: 'Chain breadth' }), el('b', { class: 'num', text: String(row.breadth_multiplier) + ' (' + (row.chains ? row.chains.length : 0) + ' chains)' })),
+        el('div', null, el('span', { text: 'Tenure multiplier' }), el('b', { class: 'num', text: row.tenure_multiplier.toFixed(3) })),
+        el('div', null, el('span', { text: 'Chain breadth' }), el('b', { class: 'num', text: row.breadth_multiplier.toFixed(3) + ' (' + (row.chains ? row.chains.length : 0) + ' chains)' })),
         el('div', { class: 'total' }, el('span', { text: 'Implied value' }), el('b', { class: 'num', text: fmtUsd(row.implied_value_usd) }))
       ),
       el('p', { class: 'note', text: 'Model ' + DATA.model_version + ': the same function scores every protocol. The page recomputes this row as ' + fmtUsd(recomputed.implied) + (matches ? ', the same number board.json carries.' : ', which differs from the board: the data would be stale.') + ' This is an estimate, not a price.' })
@@ -477,7 +496,7 @@ function radarFarmSteps(row) {
   render();
   window.addEventListener('hashchange', function () {
     var before = state.selected;
-    state.q = ''; state.category = 'all'; state.chain = 'all'; state.selected = null;
+    state.q = ''; state.category = 'all'; state.chain = 'all'; state.scope = 'all'; state.selected = null;
     readHash();
     if (before && !state.selected && dialog.open) dialog.close();
     render();

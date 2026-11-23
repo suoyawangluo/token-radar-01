@@ -117,6 +117,25 @@ export function actionFor(p: SnapshotProtocol, capital: number, chain: string): 
   if (c.includes('rwa')) return `Buy $${capital} of the protocol's yield-bearing asset on ${chain} and hold it.`;
   if (c.includes('insurance')) return `Buy $${capital} of cover from ${name} on ${chain} and keep the policy active.`;
   if (c.includes('basis')) return `Deposit $${capital} into ${name}'s basis strategy on ${chain} and hold the position.`;
+  if (c.includes('liquidity manager')) {
+    return `Deposit $${capital} into ${name}'s managed liquidity vault on ${chain} and leave the position in range.`;
+  }
+  if (c.includes('cedefi')) return `Deposit $${capital} of USDC into ${name}'s CeDeFi vault on ${chain} and hold the vault shares.`;
+  if (c.includes('anchor btc')) {
+    return `Lock $${capital} of BTC-backed collateral in ${name} on ${chain}, borrow against it once, and repay the loan.`;
+  }
+  if (c.includes('decentralized btc')) {
+    return `Bridge $${capital} of BTC through ${name} to ${chain} and put the wrapped BTC to work in its app.`;
+  }
+  if (c.includes('payments')) {
+    return `Send $${capital} through ${name}'s payment app on ${chain} and keep a steady weekly payment rhythm.`;
+  }
+  if (c.includes('governance incentives')) {
+    return `Lock $${capital} in ${name}'s governance vault on ${chain} and vote on every proposal while the position is open.`;
+  }
+  if (c.includes('crypto card')) {
+    return `Order the ${name} card, spend $${capital} through it on ${chain}, and keep the card active each week.`;
+  }
   if (c === 'chain') return `Bridge $${capital} to the chain and use ${name}'s native app: one swap and one stake.`;
   return `Deposit $${capital} of USDC into ${name} on ${chain} and leave the position open.`;
 }
@@ -127,6 +146,7 @@ function weeklyActionFor(p: SnapshotProtocol): string {
   if (c.includes('dex')) return 'Each week, rebalance or top up the pool position once, and route one swap through the protocol.';
   if (c.includes('lend') || c.includes('cdp')) return 'Each week, adjust the supply once, or borrow and repay a small amount so the position stays active.';
   if (c.includes('staking') || c.includes('restak')) return 'Each week, restake the rewards or add a little more stake so the position keeps growing.';
+  if (c.includes('payments')) return 'Each week, send one payment through the app so the volume stays steady.';
   return 'Each week, make one more qualifying action: a deposit, a swap, a borrow-and-repay, or a vote when one is live.';
 }
 

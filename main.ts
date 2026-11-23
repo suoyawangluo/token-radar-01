@@ -6,7 +6,10 @@
 // repository's dashboard/ and screenshots/ to /output, and writes /output/dossier.json with the
 // vendored make.fun library. The dashboard is a static page with no network: dashboard/index.html,
 // dashboard/radar.css and dashboard/radar.js read /output/data.js and re-derive every row's model
-// and farm plan from the same figures, so the page and the board agree.
+// and farm plan from the same figures, so the page and the board agree. The farm plan covers
+// every category on the board with its own action (liquidity managers, CeDeFi, BTC-anchored and
+// payment protocols included), and the page adds a watchlist / early-radar scope filter on top
+// of its search, category and chain filters.
 //
 // Outside the grader's container, MAKEFUN_OUTPUT_DIR stands in for /output:
 //   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts --input ../token-radar-01-kit/input/snapshot.json
